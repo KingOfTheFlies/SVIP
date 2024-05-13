@@ -1,0 +1,43 @@
+version: '2.21'
+
+services:
+  detector:
+    build:
+      context: ./app_det
+      dockerfile: Dockerfile
+    container_name: detector
+    hostname: detector
+    ports:
+      - "8156:8156"
+    networks:
+      - cursach-network
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              capabilities: [gpu]
+              device_ids: ['0','1','2']
+
+  recognizer:
+    build:
+      context: ./app_rec
+      dockerfile: Dockerfile
+    container_name: recognizer
+    hostname: recognizer
+    ports:
+      - "8912:8912"
+    networks:
+      - cursach-network
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              capabilities: [gpu]
+              device_ids: ['0','1','2']
+    
+networks:
+  cursach-network:
+    driver: bridge
+    external: true
