@@ -1,0 +1,34 @@
+version: '2.21'
+
+services:
+  age_estimator:
+    build:
+      context: ./age_gender_model/MiVOLO
+      dockerfile: Dockerfile
+    container_name: age_model
+    ports:
+      - "6175:6175"
+    networks:
+      - cursach-network
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+  bot:
+    build:
+      context: ./master_docker_bot
+      dockerfile: Dockerfile
+    container_name: bot_age
+    ports:
+      - "2863:2863"
+    networks:
+      - cursach-network
+    
+networks:
+  cursach-network:
+    driver: bridge
+    external: true
