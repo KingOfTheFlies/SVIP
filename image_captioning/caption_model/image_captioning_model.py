@@ -5,20 +5,23 @@ import torch
 import time
 import shutil
 from PIL import Image
-from transformers import BlipProcessor, BlipForConditionalGeneration
+from transformers import BlipProcessor, BlipForConditionalGeneration, BlipConfig
 import os 
 from io import BytesIO
+from scipy import stats
 
 app = FastAPI()
+config_path = "./config.json"
+config = BlipConfig.from_pretrained(config_path)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"model's device: {device}")
 
 print('Downloading preprocessor: ', end='')
-processor = BlipProcessor.from_pretrained("Salesforce/blip-image-captioning-large")
+processor = BlipProcessor.from_pretrained("Salesforce/blip-image-captioning-large", config=config)
 print('Finished')
 
 print('Downloading model: ', end='')
-model = BlipForConditionalGeneration.from_pretrained("Salesforce/blip-image-captioning-large")
+model = BlipForConditionalGeneration.from_pretrained("Salesforce/blip-image-captioning-large", config=config)
 print('Finished')
 
 model.to(device)
@@ -28,12 +31,9 @@ folder_with_imgs = "Image/"
 from PIL import Image
 import numpy as np
 
-def arafee_deleter(sentence):
-    sentence = sentence.replace('arafed ', '')
-    sentence = sentence.replace('araffe ', '')
-    sentence = sentence.replace(' arafed', '')
-    sentence = sentence.replace(' araffe', '')
-    return sentence
+softmax = torch.nn.Softmax()
+def perplexity(p):
+    return np.exp(stats.entropy(p))
 
 def extract_images_only(zip_path, target_folder):
     with ZipFile(zip_path, 'r') as zip_file:
@@ -73,13 +73,25 @@ async def get_caption(file: UploadFile = File(...)):
     res_dict = {}
 
     images = [Image.open(images_dir + 'Image/' + image_name).convert('RGB') for image_name in dirs]
-    preprocessed_images = processor(images, return_tensors="pt").to(device)
-    predicted_tensors = model.generate(**preprocessed_images, max_new_tokens=300)
-    predicted_captions = processor.batch_decode(predicted_tensors, skip_special_tokens=True)
+    # predicted_captions = processor.batch_decode(predicted_tensors, skip_special_tokens=True)
 
-    for image_name, caption in zip(dirs, predicted_captions):
-        res_dict["res/Image/" + image_name] = arafee_deleter(caption)
+    # print(predicted_tensors['sequences'], predicted_tensors['scores']) 
+    for image_name, image in zip(dirs, images):
+        preprocessed_image = processor(image, 'an image of', return_tensors="pt").to(device)
+        tokens = model.generate(**preprocessed_image, max_new_tokens=300, return_dict_in_generate=True)
+        caption = processor.decode(tokens['sequences'][0], skip_special_tokens=True)
+        res_dict["res/Image/" + image_name] = {}
+        res_dict["res/Image/" + image_name]['caption'] = caption
         print(f"Caption: {caption}")
+
+        score = 0
+        for i in range(len(tokens['scores'])): #!!!
+            score += perplexity(softmax(tokens['scores'][i].cpu().detach()[0])) #!!!
+        score /= len(tokens['scores'])
+
+        res_dict["res/Image/" + image_name]['perplexity'] = score
+
+    # print(res_dict)
 
     shutil.rmtree(temp_dir)
 
