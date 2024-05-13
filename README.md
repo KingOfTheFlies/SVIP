@@ -1,1 +1,1 @@
-# SVIP
+# SVIP: Service for Visually Impaired People
