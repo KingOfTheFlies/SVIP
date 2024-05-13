@@ -1,0 +1,5 @@
+numpy
+transformers
+fastapi
+uvicorn
+# io

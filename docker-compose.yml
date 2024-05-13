@@ -1,0 +1,42 @@
+version: '2.21'
+
+services:
+  caption:
+    build:
+      context: ./caption_model
+      dockerfile: Dockerfile
+    container_name: caption
+    hostname: caption
+    ports:
+      - "3220:3220"
+    networks:
+      - cursach-network
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+  cartoon_or_not:
+    build:
+      context: ./cartoon_or_not
+      dockerfile: Dockerfile
+    container_name: cartoon_or_not
+    hostname: cartoon_or_not
+    ports:
+      - "3219:3219"
+    networks:
+      - cursach-network
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+networks:
+  cursach-network:
+    driver: bridge
+    external: true
