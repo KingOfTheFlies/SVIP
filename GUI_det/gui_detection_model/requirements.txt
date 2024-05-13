@@ -1,0 +1,12 @@
+fastapi
+python-multipart==0.0.9
+uvicorn==0.29.0
+torch
+torchvision
+numpy
+pandas
+pillow
+ipywidgets
+dill
+ultralytics
+wandb

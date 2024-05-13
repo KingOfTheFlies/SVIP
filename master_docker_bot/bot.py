@@ -20,7 +20,7 @@ import copy
 
 import os
 
-TOKEN = "7060923400:AAGvMcMVtyWgCza8GAFeanfmCIMpCYJYajw"
+TOKEN = "TOKEN"
 
 dp = Dispatcher()
 bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
