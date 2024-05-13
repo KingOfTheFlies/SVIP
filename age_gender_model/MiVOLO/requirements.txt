@@ -1,0 +1,8 @@
+huggingface_hub==0.22.0
+fastapi==0.110.2
+opencv-python
+ultralytics==8.1.0
+timm==0.8.13.dev0
+yt_dlp==2024.03.10
+lapx>=0.5.2
+omegaconf==2.1
